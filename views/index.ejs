@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>File Server</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> <!-- load bootstrap css -->
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+
+		<style>
+		table {
+		    border-collapse: collapse;
+		    width: 100%;
+		}
+
+		th, td {
+		    text-align: left;
+		    padding: 8px;
+		    overflow: auto;
+		    max-width: 155px;
+		    max-height: 45px;
+		}
+
+		td {
+			overflow: auto;
+		}
+
+		td:last-child {
+			padding: 8px 0px;
+		}
+
+		.topFunctions{
+			display: inline-flex;
+		}
+
+		.topFunctions ul{
+			float: right;
+		}
+
+		tr:nth-child(even) {background-color: #f2f2f2;}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="page-header text-center">
+				<h1><span class="fa fa-lock"></span> File Server</h1>
+			</div>
+		</div>
+		<div class="container">
+			<!-- Sumbit File Form -->
+			<form action="/uploadFile" class="form" method="post" enctype="multipart/form-data" id="addFile">
+	          <div class="form-group">
+	          	<label for="">File input</label>
+	            <input type="file" class="form" name="files" id="fileinput" required="true" multiple></input>
+	          </div>
+	          <div class="form-group">
+	          	<label for="">File name</label>
+	            <input placeholder="Filename" type="textarea" class="form-control" name="newOriginalName"></input>
+	            <p class="help-block">Leave blank if you don't want a new file name.</p>
+	          </div>
+	          <div class="btn-group">
+	          	<button type="submit" class="btn btn-primary">Submit</button>
+	          </div>
+	        </form>
+
+	        <% if(files){ %>
+			<button onclick="sortList()" class="btn btn-default">Sort</button>
+			<button onclick="showNewFolder()" type="" class="btn btn-info topFunctions">Add folder</button>
+			<nav aria-label="Page navigation example pull-right" class="topFunctions">
+			  <ul class="pagination justify-content-end topFunctions">
+			  	<li class="page-item"><button class="page-link" href="#" onclick="nextData('previous')">Previous</button></li>
+			  	<% for(var i = 1; page >= i; i++){ %>
+			    <li class="page-item"><button class="page-link" onclick="nextData(<%= i %>)"><%= i %></button></li>
+			    <% } %>
+			    <li class="page-item"><button class="page-link" href="#" onclick="nextData('next')">Next</button></li>
+			  </ul>
+			</nav>
+			<form action="/newFolder" method="post" accept-charset="utf-8" id="hiddenForm" hidden>
+				<div class="form-group">
+					<label for="">Folder name</label>
+					<input type="textarea" class="form-control" name="newFolderName"/>
+					<button type="submit" class="btn btn-success">Create new folder</button>
+				</div>
+			</form>
+			<div class="">
+			<table id="files" class="table table-condensed ">
+				<tbody id="tbody">
+				<tr>
+					<th>Name</th>
+					<th>Uploaded</th>
+					<th>Additional</th>
+				</tr>
+				<% if(dir){ %>
+					<% dir.forEach(function(e, i){ %>				
+						<tr style="cursor: pointer;" class="table-success" name="<%= e %>thing">
+							<td style="font-weight: bold" Colspan="2" onclick="getDirContent('<%= e %>')"><%= e %></td>
+							<td>
+								<div class="col-md-12">
+									<button onclick="" type="" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="<%= e %>">Upload File</button>
+								</div>
+							</td>
+						</tr>
+					<% }) %>
+				<% } %>
+				<% files.forEach(function(file, i){ %>
+				<tr id="file" class="MainList">
+					<td style="overflow: auto;">
+						<%= file.originalname %>
+					</td>
+					<td style="overflow: auto;">
+						<%= file.niceDate %>
+					</td>
+					<td style="padding: 8px 0px">
+						<div class="btn-group bigScreen col-md-12">
+							<form style="padding: 0px; display: inline" action="/file/<%=file.filename%>/<%=file.originalname%>" class="" method="post">
+								<button type="submit" class="btn btn-primary">Download</button>
+							</form>
+							<form style="padding: 0px; display: inline" action="/remove/<%=file.filename%>/<%=file.originalname%>" class="" method="post">
+								<button type="submit" class="btn btn-danger">Delete</button>
+							</form>
+						</div>
+					</td>
+				</tr>
+				<% }) %>
+			</tbody>
+			</table>
+			</div>
+			<nav aria-label="Page navigation example">
+			  <ul class="pagination">
+			  	<li class="page-item"><a class="page-link" href="#">Previous</a></li>
+			  	<% for(var i = 1; page >= i; i++){ %>
+			    <li class="page-item"><a class="page-link" href="#"><%= i %></a></li>
+			    <% } %>
+			    <li class="page-item"><a class="page-link" href="#">Next</a></li>
+			  </ul>
+			</nav>
+			<% }else{ %>
+				<p>No files found</p>
+			<% } %>
+		</div>
+		<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		  <div class="modal-dialog" role="document">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-directory" id="exampleModalLabel"></h5>
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		          <span aria-hidden="true">&times;</span>
+		        </button>
+		      </div>
+		      <div class="modal-body">
+				<form style="padding: 0px; display: inline" action="" class="form modal-form" method="post" enctype="multipart/form-data" id="addFile">
+			        <div class="" id="addFileToDir">
+						<div class="form-group">
+				          	<label for="">File input</label>
+				            <input type="file" class="form" name="files" id="fileinput" required="true" multiple></input>
+				        </div>
+				        <div class="form-group">
+				        	<label for="">File name</label>
+				            <input placeholder="Filename" type="textarea" class="form-control" name="newOriginalName"></input>
+				            <p class="help-block">Leave blank if you don't want a new file name.</p>
+				        </div>
+						<button type="submit" class="btn btn-primary">Upload File</button>
+					</div>
+				</form>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+		        <button type="button" class="btn btn-primary">Send message</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+		<script src="/main.js" type="text/javascript" charset="utf-8"></script>
+		<script src="/socket.io/socket.io.js"></script>
+	    <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+	    <script>
+	      var socket = io('/');
+	      $('form').submit(function(){
+	        socket.emit('file sent', $('#fileinput').prop('files')[0]);
+	      });
+	      socket.on('file change', function(file){
+	      	console.log('file change!!');
+	        $('#tbody').append($('<tr>')).append($('<td>').text(file.originalname)).append($('<td>').text(file.filename));
+	      });
+	  //   if ($(window).width() > 991) {
+			// 	$('.bigScreen').show();
+			// 	$('.smallScreen').hide();
+			// }
+			// else {
+			// 	$('.bigScreen').hide();
+			// 	$('.smallScreen').show();
+			// }
+		 //    $(window).resize(function() {
+			//     if ($(window).width() > 991) {
+			// 		$('.bigScreen').show();
+			// 		$('.smallScreen').hide();
+			// 	}
+			// 	else {
+			// 		$('.bigScreen').hide();
+			// 		$('.smallScreen').show();
+			// 	}
+			// })
+			$( "tr.success" ).children().hover(
+			function() {
+			  $( this ).css("background-color", "#D3D3D3");
+			}, function() {
+			  $( this ).css("background-color", "");
+			})
+			$( "tr.info" ).children().hover(
+			function() {
+			  $( this ).css("background-color", "gray");
+			}, function() {
+			  $( this ).css("background-color", "");
+			})
+
+			$('#exampleModal').on('show.bs.modal', function (event){
+			  var button = $(event.relatedTarget) // Button that triggered the modal
+			  var recipient = button.data('whatever') // Extract info from data-* attributes
+			  console.log(recipient)
+			  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+			  // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+			  var modal = $(this)
+			  modal.find('.modal-directory').text(recipient)
+			  modal.find('.modal-form').attr('action', '/uploadFileToDir/'+recipient)
+			})
+	    </script>
+	</body>
+</html>
