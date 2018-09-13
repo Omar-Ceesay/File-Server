@@ -226,7 +226,7 @@ app.post('/uploadFileToDir/:dir', function(req,res){
 })
 
 app.post('/payload', function(req,res){
-	console.log(req);
+	console.log(req.body.read);
 })
 
 fileWatcher.on('file sent', function(msg){
